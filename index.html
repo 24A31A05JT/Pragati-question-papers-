@@ -2383,17 +2383,16 @@
                            <span>No File</span>
                        </button>`;
 
-                const adminControlsHTML = (currentUserRole === 'admin')
-                    ? `<div class="grid grid-cols-2 gap-2 w-full pt-2">
-                           <button class="edit-btn py-1.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-semibold text-xs rounded-lg transition-colors flex items-center justify-center space-x-1.5" data-id="${paper.id}">
-                               <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                               <span>Edit Details</span>
-                           </button>
-                           <button class="delete-btn py-1.5 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 font-semibold text-xs rounded-lg transition-colors flex items-center justify-center space-x-1.5" data-id="${paper.id}">
-                               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                               <span>Delete</span>
-                           </button>
-                       </div>`
+                const editPencilHTML = (currentUserRole === 'admin')
+                    ? `<button class="edit-btn p-1 text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded transition-colors shrink-0" data-id="${paper.id}" title="Edit Paper Details">
+                           <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                       </button>`
+                    : '';
+
+                const deleteButtonHTML = (currentUserRole === 'admin')
+                    ? `<button class="delete-btn p-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900 text-red-600 dark:text-red-400 rounded-lg transition-colors flex items-center justify-center shrink-0" data-id="${paper.id}" title="Permanently Delete">
+                           <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                       </button>`
                     : '';
 
                 card.innerHTML = `
@@ -2401,21 +2400,22 @@
                         <div>
                             <div class="flex justify-between items-start space-x-2 mb-2">
                                  <h4 class="font-bold text-base text-gray-900 dark:text-white leading-snug">${paper.subject}</h4>
-                                 <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 bg-${branchColor}-100 text-${branchColor}-800 rounded-md dark:bg-${branchColor}-900/70 dark:text-${branchColor}-300 shrink-0">${paper.branch}</span>
+                                 <div class="flex items-center space-x-1 shrink-0">
+                                     <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 bg-${branchColor}-100 text-${branchColor}-800 rounded-md dark:bg-${branchColor}-900/70 dark:text-${branchColor}-300">${paper.branch}</span>
+                                     ${editPencilHTML}
+                                 </div>
                             </div>
                             <p class="text-gray-500 dark:text-gray-400 text-xs mb-4">
                                 Year ${paper.year} &bull; Sem ${paper.semester} &bull; <span class="font-bold text-blue-600 dark:text-blue-400">${paper.regulation || 'R23'}</span> &bull; ${paper.type}
                             </p>
                         </div>
-                        <div class="pt-3 border-t border-gray-100 dark:border-gray-700/60 w-full space-y-1">
-                            <div class="flex items-center space-x-2 w-full">
-                                <button class="preview-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2 px-3 rounded-lg shadow-sm transition-all flex items-center justify-center space-x-1.5" data-id="${paper.id}">
-                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                                    <span>Preview</span>
-                                </button>
-                                ${downloadButtonHTML}
-                            </div>
-                            ${adminControlsHTML}
+                        <div class="pt-3 border-t border-gray-100 dark:border-gray-700/60 w-full flex items-center space-x-2">
+                            <button class="preview-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2 px-3 rounded-lg shadow-sm transition-all flex items-center justify-center space-x-1.5" data-id="${paper.id}">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                <span>Preview</span>
+                            </button>
+                            ${downloadButtonHTML}
+                            ${deleteButtonHTML}
                         </div>
                     </div>
                 `;
