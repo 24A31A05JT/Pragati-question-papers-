@@ -522,6 +522,87 @@
                 </div>
             </div>
         </div>
+    <!-- Modal for Editing Paper Details -->
+    <div id="edit-paper-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700/60 p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold flex items-center space-x-2 text-gray-800 dark:text-gray-100">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-blue-500"></i>
+                    <span>Edit Question Paper Details</span>
+                </h3>
+                <button id="close-edit-modal-btn" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold text-xl">&times;</button>
+            </div>
+            <form id="edit-paper-form" class="p-6 space-y-4">
+                <input type="hidden" id="edit-paper-id">
+                
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Subject Name</label>
+                    <input type="text" id="edit-subject" required class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 font-medium text-gray-900 dark:text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Regulation</label>
+                        <select id="edit-regulation" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-medium text-gray-900 dark:text-white">
+                            <option value="R23">R23 Regulation</option>
+                            <option value="R20">R20 Regulation</option>
+                            <option value="R19">R19 Regulation</option>
+                            <option value="R16">R16 Regulation</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Branch / Department</label>
+                        <select id="edit-branch" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-medium text-gray-900 dark:text-white">
+                            <option value="CSE">CSE</option>
+                            <option value="ECE">ECE</option>
+                            <option value="EEE">EEE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                            <option value="IT">IT</option>
+                            <option value="AIML">AIML</option>
+                            <option value="DS">DS</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Year</label>
+                        <select id="edit-year" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-medium text-gray-900 dark:text-white">
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Semester</label>
+                        <select id="edit-semester" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-medium text-gray-900 dark:text-white">
+                            <option value="1">Sem 1</option>
+                            <option value="2">Sem 2</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Exam Type</label>
+                        <select id="edit-type" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-medium text-gray-900 dark:text-white">
+                            <option value="Semester">Semester</option>
+                            <option value="Mid-Term">Mid-Term</option>
+                            <option value="Supplementary">Supplementary</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" id="cancel-edit-btn" class="px-5 py-2.5 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold transition-colors text-gray-800 dark:text-gray-200">
+                        Cancel
+                    </button>
+                    <button type="submit" id="save-edit-btn" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow transition-colors flex items-center space-x-2">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>Save Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Toast Notification -->
@@ -2296,6 +2377,12 @@
                     ? `<button class="download-btn text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-4 rounded-md transition-colors" data-id="${paper.id}">Download</button>`
                     : `<button class="text-sm bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 py-2 px-4 rounded-md cursor-not-allowed" disabled>Download</button>`;
 
+                const editButtonHTML = userRole === 'admin'
+                    ? `<button class="edit-btn text-sm bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-900/50 dark:hover:bg-yellow-900 text-yellow-700 dark:text-yellow-300 p-2 rounded-md transition-colors flex items-center justify-center" data-id="${paper.id}" title="Edit Paper Details">
+                           <i data-lucide="edit-3" class="w-4 h-4"></i>
+                       </button>`
+                    : '';
+
                 const deleteButtonHTML = userRole === 'admin'
                     ? `<button class="delete-btn text-sm bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900 text-red-600 dark:text-red-400 p-2 rounded-md transition-colors flex items-center justify-center" data-id="${paper.id}" title="Permanently Delete">
                            <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -2305,7 +2392,7 @@
                 card.innerHTML = `
                     <div class="p-5">
                         <div class="flex justify-between items-start">
-                             <h4 class="font-bold text-lg mb-2">${paper.subject}</h4>
+                             <h4 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">${paper.subject}</h4>
                              <span class="text-xs font-semibold px-2 py-1 bg-${branchColor}-100 text-${branchColor}-800 rounded-full dark:bg-${branchColor}-900 dark:text-${branchColor}-300">${paper.branch}</span>
                         </div>
                         <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
@@ -2314,6 +2401,7 @@
                         <div class="flex justify-between items-center space-x-2">
                             <button class="preview-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors" data-id="${paper.id}">Preview</button>
                             ${downloadButtonHTML}
+                            ${editButtonHTML}
                             ${deleteButtonHTML}
                         </div>
                     </div>
@@ -2656,6 +2744,19 @@
                     }
                 }
                 
+                // Edit Button
+                if (button.classList.contains('edit-btn')) {
+                    const editModal = document.getElementById('edit-paper-modal');
+                    document.getElementById('edit-paper-id').value = paper.id;
+                    document.getElementById('edit-subject').value = paper.subject;
+                    document.getElementById('edit-regulation').value = paper.regulation || 'R23';
+                    document.getElementById('edit-branch').value = paper.branch;
+                    document.getElementById('edit-year').value = paper.year;
+                    document.getElementById('edit-semester').value = paper.semester;
+                    document.getElementById('edit-type').value = paper.type;
+                    if (editModal) editModal.classList.remove('hidden');
+                }
+
                 // Delete Button
                 if (button.classList.contains('delete-btn')) {
                     if (deleteModalText) deleteModalText.textContent = `Do you really want to delete the paper for "${paper.subject}" (${paper.branch} - ${paper.regulation || 'R23'})?`;
@@ -2675,6 +2776,59 @@
                 }
             });
         });
+
+        // --- Edit Paper Modal Form Submission ---
+        const editModal = document.getElementById('edit-paper-modal');
+        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const editPaperForm = document.getElementById('edit-paper-form');
+
+        if (closeEditModalBtn) closeEditModalBtn.addEventListener('click', () => editModal.classList.add('hidden'));
+        if (cancelEditBtn) cancelEditBtn.addEventListener('click', () => editModal.classList.add('hidden'));
+        if (editModal) {
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal) editModal.classList.add('hidden');
+            });
+        }
+
+        if (editPaperForm) {
+            editPaperForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const paperId = document.getElementById('edit-paper-id').value;
+                const subject = document.getElementById('edit-subject').value.trim();
+                const regulation = document.getElementById('edit-regulation').value;
+                const branch = document.getElementById('edit-branch').value;
+                const year = parseInt(document.getElementById('edit-year').value);
+                const semester = parseInt(document.getElementById('edit-semester').value);
+                const type = document.getElementById('edit-type').value;
+
+                const paper = questionPapers.find(p => p.id == paperId);
+                if (paper) {
+                    paper.subject = subject;
+                    paper.regulation = regulation;
+                    paper.branch = branch;
+                    paper.year = year;
+                    paper.semester = semester;
+                    paper.type = type;
+
+                    if (db) {
+                        await db.ref('papers/' + paperId).update({
+                            subject: subject,
+                            regulation: regulation,
+                            branch: branch,
+                            year: year,
+                            semester: semester,
+                            type: type
+                        });
+                    }
+
+                    filterPapers();
+                    animateCounters();
+                    if (editModal) editModal.classList.add('hidden');
+                    showToast("Paper Details Updated", `"${subject}" (${regulation} - ${branch}) updated successfully!`, "success");
+                }
+            });
+        }
 
         if (closeModalBtn) closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
         if (modal) {
