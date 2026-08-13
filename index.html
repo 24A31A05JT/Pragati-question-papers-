@@ -2554,7 +2554,7 @@
 
         [papersGrid, document.getElementById('department-papers-grid')].forEach(grid => {
             if (!grid) return; 
-            grid.addEventListener('click', e => {
+            grid.addEventListener('click', async e => {
                 const button = e.target.closest('button');
                 if (!button) return;
 
@@ -2562,7 +2562,19 @@
                 if (!paperId) return;
 
                 const paper = questionPapers.find(p => p.id == paperId);
-                if (!paper) return; 
+                if (!paper) return;
+
+                // High-Speed On-Demand PDF Load from Firebase
+                if (db && paperId && (!paper.fileUrl || (!paper.fileUrl.startsWith('data:') && !paper.fileUrl.endsWith('.pdf')))) {
+                    try {
+                        const snap = await db.ref('papers_content/' + paperId).once('value');
+                        if (snap.exists() && snap.val().fileUrl) {
+                            paper.fileUrl = snap.val().fileUrl;
+                        }
+                    } catch (err) {
+                        console.warn("On-demand content fetch fallback:", err);
+                    }
+                }
 
                 // Preview Button
                 if (button.classList.contains('preview-btn')) {
