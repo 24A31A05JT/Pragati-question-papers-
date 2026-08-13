@@ -213,6 +213,7 @@
                                 <input type="text" id="search-input" placeholder="Search by subject..." class="w-full lg:col-span-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
                                 <select id="branch-filter" class="p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
                                     <option value="all">All Branches</option>
+                                    <option value="COMMON">COMMON (ALL BRANCHES)</option>
                                     <option value="CSE">CSE</option>
                                     <option value="ECE">ECE</option>
                                     <option value="MECH">MECH</option>
@@ -322,6 +323,7 @@
                                     <div>
                                         <label for="upload-branch" class="block mb-2 font-medium">Branch</label>
                                         <select id="upload-branch" class="w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="COMMON">COMMON (ALL BRANCHES)</option>
                                             <option value="CSE">CSE</option>
                                             <option value="ECE">ECE</option>
                                             <option value="MECH">MECH</option>
@@ -553,6 +555,7 @@
                     <div>
                         <label class="block text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-1">Branch / Department</label>
                         <select id="edit-branch" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 font-medium text-gray-900 dark:text-white">
+                            <option value="COMMON">COMMON (ALL BRANCHES)</option>
                             <option value="CSE">CSE</option>
                             <option value="ECE">ECE</option>
                             <option value="EEE">EEE</option>
@@ -2342,6 +2345,15 @@
         const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
         const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
 
+        function paperMatchesBranch(paper, targetBranch) {
+            if (!targetBranch || targetBranch === 'all') return true;
+            const b = (paper.branch || '').toUpperCase().trim();
+            if (b === 'COMMON' || b === 'ALL' || b.includes('COMMON')) return true;
+            
+            const branches = b.split(',').map(x => x.trim());
+            return branches.includes(targetBranch.toUpperCase());
+        }
+
         function renderPapers(papers, gridElement, noResultsElement) {
             if (!gridElement) return;
             gridElement.innerHTML = '';
@@ -2373,6 +2385,11 @@
                     case 'DS': branchColor = 'cyan'; break;
                 }
 
+                let branchBadgeHTML = `<span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 bg-${branchColor}-100 text-${branchColor}-800 rounded-md dark:bg-${branchColor}-900/70 dark:text-${branchColor}-300">${paper.branch}</span>`;
+                if ((paper.branch || '').toUpperCase() === 'COMMON' || (paper.branch || '').toUpperCase() === 'ALL') {
+                    branchBadgeHTML = `<span class="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md shadow-sm">COMMON (ALL)</span>`;
+                }
+
                 const hasDownload = paper.fileUrl || paper.pdfBlob || paper.previewContent;
                 const downloadButtonHTML = hasDownload
                     ? `<button class="download-btn flex-1 bg-gray-100 dark:bg-gray-700/80 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold text-xs py-2 px-3 rounded-lg transition-all flex items-center justify-center space-x-1.5 shadow-sm" data-id="${paper.id}">
@@ -2402,7 +2419,7 @@
                             <div class="flex justify-between items-start space-x-2 mb-2">
                                  <h4 class="font-bold text-base text-gray-900 dark:text-white leading-snug">${paper.subject}</h4>
                                  <div class="flex items-center space-x-1 shrink-0">
-                                     <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 bg-${branchColor}-100 text-${branchColor}-800 rounded-md dark:bg-${branchColor}-900/70 dark:text-${branchColor}-300">${paper.branch}</span>
+                                     ${branchBadgeHTML}
                                      ${editPencilHTML}
                                  </div>
                             </div>
@@ -2437,7 +2454,7 @@
 
             const filteredPapers = questionPapers.filter(paper => {
                 const matchSearch = paper.subject.toLowerCase().includes(searchTerm);
-                const matchBranch = branch === 'all' || paper.branch === branch;
+                const matchBranch = paperMatchesBranch(paper, branch);
                 const matchYear = year === 'all' || paper.year == year;
                 const matchReg = regulation === 'all' || paper.regulation === regulation;
                 const matchExam = examType === 'all' || paper.type === examType;
@@ -2460,7 +2477,7 @@
                     document.querySelectorAll('.department-card').forEach(c => c.classList.remove('selected'));
                     card.classList.add('selected');
                     
-                    const departmentPapers = questionPapers.filter(p => p.branch === department);
+                    const departmentPapers = questionPapers.filter(p => paperMatchesBranch(p, department));
                     
                     const departmentPapersView = document.getElementById('department-papers-view');
                     const departmentPapersTitle = document.getElementById('department-papers-title');
