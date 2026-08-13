@@ -2345,18 +2345,19 @@
         function renderPapers(papers, gridElement, noResultsElement) {
             if (!gridElement) return;
             gridElement.innerHTML = '';
-            if (papers.length === 0) {
+
+            const currentUserRole = sessionStorage.getItem('userRole');
+
+            if (!papers || papers.length === 0) {
                 if (noResultsElement) noResultsElement.classList.remove('hidden');
                 return;
             }
+
             if (noResultsElement) noResultsElement.classList.add('hidden');
 
-            const userRole = sessionStorage.getItem('userRole'); 
-
-            papers.forEach((paper, index) => {
+            papers.forEach(paper => {
                 const card = document.createElement('div');
-                card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 card-enter';
-                card.style.animationDelay = `${index * 50}ms`;
+                card.className = 'paper-card bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 dark:border-gray-700/80 overflow-hidden flex flex-col justify-between';
                 
                 let branchColor = 'blue';
                 switch(paper.branch) {
@@ -2382,7 +2383,7 @@
                            <span>No File</span>
                        </button>`;
 
-                const adminControlsHTML = userRole === 'admin'
+                const adminControlsHTML = (currentUserRole === 'admin')
                     ? `<div class="grid grid-cols-2 gap-2 w-full pt-2">
                            <button class="edit-btn py-1.5 px-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 font-semibold text-xs rounded-lg transition-colors flex items-center justify-center space-x-1.5" data-id="${paper.id}">
                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
@@ -2421,9 +2422,8 @@
                 gridElement.appendChild(card);
             });
             
-            if (userRole === 'admin') {
-                lucide.createIcons();
-            }
+            // Always initialize Lucide icons for all rendered cards
+            lucide.createIcons();
         }
         
         function filterPapers() {
