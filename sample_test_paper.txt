@@ -1,0 +1,10 @@
+PRAGATI ENGINEERING COLLEGE: SURAMPALEM
+AUTOMATED TEST QUESTION PAPER FOR FIREBASE INTEGRATION
+Course Code: 23CS301T
+Regulation: R23
+Branch: Computer Science & Engineering
+Year: 3, Semester: 1
+Time: 3 Hours  Max. Marks: 70
+
+Question 1: Explain Firebase Realtime Database and Cloud Storage integration.
+Question 2: Demonstrate real permanent deletion of files from Firebase Storage.

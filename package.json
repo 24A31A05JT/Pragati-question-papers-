@@ -1,0 +1,13 @@
+{
+  "name": "pragati-question-papers",
+  "version": "1.0.0",
+  "description": "Pragati College Question Paper Portal with Firebase Integration",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p ${PORT:-8080}",
+    "test:automation": "node test-admin-flow.js"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.4.0"
+  }
+}

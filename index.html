@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pragati College Question Paper Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .dark .dark\:bg-gray-800 { background-color: #1f2937; }
+        .dark .dark\:bg-gray-900 { background-color: #111827; }
+        .dark .dark\:text-gray-200 { color: #e5e7eb; }
+        .dark .dark\:text-gray-400 { color: #9ca3af; }
+        .dark .dark\:border-gray-700 { border-color: #374151; }
+        .dark .dark\:hover\:bg-gray-700:hover { background-color: #374151; }
+        .dark .dark\:focus\:ring-gray-700:focus { ring-color: #374151; }
+        .card-enter {
+            animation: card-enter 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes card-enter {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .department-card.selected {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <!-- App Container (Hidden by default, shown after login) -->
+    <div id="app-container" class="hidden">
+        <div class="flex min-h-screen">
+            <!-- Sidebar Navigation -->
+            <aside class="w-64 bg-white dark:bg-gray-800 shadow-md flex-shrink-0 hidden md:block">
+                <div class="p-6 flex items-center justify-center border-b dark:border-gray-700">
+                     <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400">Pragati Portal</h1>
+                </div>
+                <nav class="mt-6 flex flex-col h-[calc(100%-80px)]">
+                    <div class="flex-1">
+                        <a href="#home" class="nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <i data-lucide="home" class="w-5 h-5 mr-3"></i>
+                            Home
+                        </a>
+                        <a href="#papers" class="nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <i data-lucide="files" class="w-5 h-5 mr-3"></i>
+                            Question Papers
+                        </a>
+                        <a href="#departments" class="nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                           <i data-lucide="building-2" class="w-5 h-5 mr-3"></i>
+                            Departments
+                        </a>
+                        <a href="#upload" class="nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                           <i data-lucide="upload-cloud" class="w-5 h-5 mr-3"></i>
+                            Upload
+                        </a>
+                        <a href="#analytics" class="nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 mr-3"></i>
+                            Analytics
+                        </a>
+                        <a href="#about" class="nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <i data-lucide="info" class="w-5 h-5 mr-3"></i>
+                            About
+                        </a>
+                    </div>
+                    <div class="mt-auto p-4">
+                         <a href="#" id="logout-btn" class="nav-link flex items-center px-6 py-3 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-md">
+                            <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+                            Logout
+                        </a>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1">
+                <header class="bg-white dark:bg-gray-800 shadow-sm p-4 flex justify-between items-center">
+                    <div class="flex items-center">
+                         <button id="mobile-menu-button" class="md:hidden mr-4 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <i data-lucide="menu" class="w-6 h-6"></i>
+                        </button>
+                        <h2 class="text-2xl font-semibold">Dashboard</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <i id="theme-icon" data-lucide="sun" class="w-6 h-6"></i>
+                        </button>
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                            S
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Mobile Sidebar -->
+                <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden">
+                    <aside class="w-64 bg-white dark:bg-gray-800 h-full">
+                         <div class="p-6 flex items-center justify-between border-b dark:border-gray-700">
+                             <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400">Pragati Portal</h1>
+                             <button id="close-mobile-menu" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                 <i data-lucide="x" class="w-6 h-6"></i>
+                             </button>
+                        </div>
+                         <nav class="mt-6 flex flex-col h-[calc(100%-80px)]">
+                             <div class="flex-1">
+                                <a href="#home" class="nav-link mobile-nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                    <i data-lucide="home" class="w-5 h-5 mr-3"></i> Home
+                                </a>
+                                <a href="#papers" class="nav-link mobile-nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                    <i data-lucide="files" class="w-5 h-5 mr-3"></i> Question Papers
+                                </a>
+                                <a href="#departments" class="nav-link mobile-nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                   <i data-lucide="building-2" class="w-5 h-5 mr-3"></i> Departments
+                                </a>
+                                <a href="#upload" class="nav-link mobile-nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                   <i data-lucide="upload-cloud" class="w-5 h-5 mr-3"></i> Upload
+                                </a>
+                                <a href="#analytics" class="nav-link mobile-nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                    <i data-lucide="bar-chart-2" class="w-5 h-5 mr-3"></i> Analytics
+                                </a>
+                                <a href="#about" class="nav-link mobile-nav-link flex items-center px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                                   <i data-lucide="info" class="w-5 h-5 mr-3"></i> About
+                                </a>
+                            </div>
+                            <div class="mt-auto p-4">
+                                <a href="#" id="logout-btn-mobile" class="nav-link flex items-center px-6 py-3 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-md">
+                                    <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </nav>
+                    </aside>
+                </div>
+
+                <!-- Page Content Area -->
+                <div class="p-6 md:p-8 space-y-8">
+                    <!-- Home Section -->
+                    <section id="home" class="page-section space-y-8">
+                        <!-- Hero Banner with 3D Background -->
+                        <div class="relative rounded-xl overflow-hidden h-64 md:h-80 w-full bg-gray-900">
+                            <div id="threejs-canvas" class="absolute inset-0"></div>
+                            <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-center p-4">
+                                <h1 class="text-3xl md:text-5xl font-extrabold text-white">Pragati College Question Paper Portal</h1>
+                                <p class="mt-4 text-lg text-gray-300 max-w-2xl">Your one-stop destination for all previous year academic question papers. Smart, fast, and easy to use.</p>
+                            </div>
+                        </div>
+                        <!-- Stat Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Stat Box 1: Total Papers -->
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[180px]">
+                                <div class="bg-blue-100 dark:bg-blue-900/50 p-4 rounded-full mb-3">
+                                    <i data-lucide="file-archive" class="w-8 h-8 text-blue-500"></i>
+                                </div>
+                                <div>
+                                    <p class="text-3xl font-bold counter" data-target="1245">0</p>
+                                    <p class="text-gray-500 dark:text-gray-400 mt-1">Total Papers</p>
+                                </div>
+                            </div>
+                            <!-- Stat Box 2: Subjects Covered -->
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[180px]">
+                                <div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-full mb-3">
+                                    <i data-lucide="book-open" class="w-8 h-8 text-green-500"></i>
+                                </div>
+                                <div>
+                                    <p class="text-3xl font-bold counter" data-target="86">0</p>
+                                    <p class="text-gray-500 dark:text-gray-400 mt-1">Subjects Covered</p>
+                                </div>
+                            </div>
+                            <!-- Stat Box 3: Departments -->
+                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center text-center min-h-[180px]">
+                                <div class="bg-indigo-100 dark:bg-indigo-900/50 p-4 rounded-full mb-3">
+                                    <i data-lucide="users" class="w-8 h-8 text-indigo-500"></i>
+                                </div>
+                                <div>
+                                    <p class="text-3xl font-bold counter" data-target="10">0</p>
+                                    <p class="text-gray-500 dark:text-gray-400 mt-1">Departments</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Question Papers Section -->
+                    <section id="papers" class="page-section hidden">
+                        <h3 class="text-2xl font-bold mb-6">Browse Question Papers</h3>
+                        <!-- Filter Controls -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                                <input type="text" id="search-input" placeholder="Search by subject..." class="w-full lg:col-span-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                <select id="branch-filter" class="p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="all">All Branches</option>
+                                    <option value="CSE">CSE</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="MECH">MECH</option>
+                                    <option value="CIVIL">CIVIL</option>
+                                    <option value="EEE">EEE</option>
+                                    <option value="AIML">AIML</option>
+                                    <option value="AI">AI</option>
+                                    <option value="IT">IT</option>
+                                    <option value="CSC">CSC</option>
+                                    <option value="DS">DS</option>
+                                </select>
+                                <select id="year-filter" class="p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="all">All Years</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                                <select id="regulation-filter" class="p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="all">All Regulations</option>
+                                    <option value="R23">R23</option>
+                                    <option value="R20">R20</option>
+                                    <option value="R19">R19</option>
+                                    <option value="R16">R16</option>
+                                </select>
+                                <select id="exam-type-filter" class="p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="all">All Exam Types</option>
+                                    <option value="Mid-Term">Mid-Term</option>
+                                    <option value="Semester">Semester</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Grid for Paper Cards -->
+                        <div id="papers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <!-- Paper cards will be inserted here by JS -->
+                        </div>
+                         <p id="no-results" class="text-center text-gray-500 dark:text-gray-400 mt-8 hidden">No question papers found matching your criteria.</p>
+                    </section>
+                    
+                    <!-- Departments Section -->
+                    <section id="departments" class="page-section hidden">
+                        <h3 class="text-2xl font-bold mb-6">Browse by Department</h3>
+                        <!-- Grid for Department Cards -->
+                        <div id="department-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            <div class="department-card bg-blue-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="CSE">
+                                <i data-lucide="cpu" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">CSE</h4>
+                            </div>
+                            <div class="department-card bg-indigo-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="ECE">
+                                <i data-lucide="radio-tower" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">ECE</h4>
+                            </div>
+                             <div class="department-card bg-red-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="MECH">
+                                <i data-lucide="wrench" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">MECH</h4>
+                            </div>
+                             <div class="department-card bg-green-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="CIVIL">
+                                <i data-lucide="pencil-ruler" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">CIVIL</h4>
+                            </div>
+                             <div class="department-card bg-yellow-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="EEE">
+                                <i data-lucide="bolt" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">EEE</h4>
+                            </div>
+                             <div class="department-card bg-pink-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="AIML">
+                                <i data-lucide="brain-circuit" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">AIML</h4>
+                            </div>
+                            <div class="department-card bg-purple-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="AI">
+                                <i data-lucide="brain" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">AI</h4>
+                            </div>
+                            <div class="department-card bg-orange-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="IT">
+                                <i data-lucide="network" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">IT</h4>
+                            </div>
+                             <div class="department-card bg-teal-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="CSC">
+                                <i data-lucide="cloud-cog" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">CSC</h4>
+                            </div>
+                            <div class="department-card bg-cyan-500 text-white p-6 rounded-xl flex flex-col items-center justify-center text-center transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer" data-department="DS">
+                                <i data-lucide="database-zap" class="w-12 h-12 mb-4"></i>
+                                <h4 class="text-xl font-bold">DS</h4>
+                            </div>
+                        </div>
+
+                        <!-- View for Department-Specific Papers (Hidden by default) -->
+                        <div id="department-papers-view" class="mt-12 hidden">
+                            <h3 id="department-papers-title" class="text-2xl font-bold mb-6"></h3>
+                            <div id="department-papers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                <!-- Department-specific paper cards will be inserted here -->
+                            </div>
+                            <p id="department-no-results" class="text-center text-gray-500 dark:text-gray-400 mt-8 hidden">No question papers found for this department.</p>
+                        </div>
+                    </section>
+
+                    <!-- Upload Section (Admin only) -->
+                    <section id="upload" class="page-section hidden">
+                        <h3 class="text-2xl font-bold mb-6">Upload Question Paper</h3>
+                        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg max-w-2xl mx-auto">
+                            <form id="upload-form" class="space-y-6">
+                                <div>
+                                    <label for="upload-subject" class="block mb-2 font-medium">Subject Name</label>
+                                    <input id="upload-subject" type="text" placeholder="e.g., Data Structures" required class="w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="upload-branch" class="block mb-2 font-medium">Branch</label>
+                                        <select id="upload-branch" class="w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="CSE">CSE</option>
+                                            <option value="ECE">ECE</option>
+                                            <option value="MECH">MECH</option>
+                                            <option value="CIVIL">CIVIL</option>
+                                            <option value="EEE">EEE</option>
+                                            <option value="AIML">AIML</option>
+                                            <option value="AI">AI</option>
+                                            <option value="IT">IT</option>
+                                            <option value="CSC">CSC</option>
+                                            <option value="DS">DS</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="upload-year" class="block mb-2 font-medium">Year</label>
+                                        <select id="upload-year" class="w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="1">1st Year</option>
+                                            <option value="2">2nd Year</option>
+                                            <option value="3">3rd Year</option>
+                                            <option value="4">4th Year</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label for="upload-semester" class="block mb-2 font-medium">Semester</label>
+                                        <select id="upload-semester" class="w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="1">Semester 1</option>
+                                            <option value="2">Semester 2</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="upload-regulation" class="block mb-2 font-medium">Regulation</label>
+                                        <select id="upload-regulation" class="w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="R23">R23</option>
+                                            <option value="R20">R20</option>
+                                            <option value="R19">R19</option>
+                                            <option value="R16">R16</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="upload-exam-type" class="block mb-2 font-medium">Exam Type</label>
+                                        <select id="upload-exam-type" class="w-full p-3 border rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="Mid-Term">Mid-Term</option>
+                                            <option value="Semester">Semester</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block mb-2 font-medium">Question Paper (PDF, TXT, DOC)</label>
+                                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
+                                        <div class="space-y-1 text-center">
+                                            <i data-lucide="file-up" class="mx-auto h-12 w-12 text-gray-400"></i>
+                                            <div class="flex text-sm text-gray-600 dark:text-gray-400">
+                                                <label for="file-upload" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                                    <span>Upload a file</span>
+                                                    <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".pdf,.txt,.doc,.docx">
+                                                </label>
+                                                <p class="pl-1">or drag and drop</p>
+                                            </div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, or TXT up to 10MB</p>
+                                        </div>
+                                    </div>
+                                    <p id="file-upload-name" class="text-sm text-gray-500 dark:text-gray-400 mt-2 font-semibold text-blue-600 dark:text-blue-400"></p>
+                                </div>
+                                <button type="submit" id="upload-submit-btn" class="w-full bg-blue-600 text-white p-3 rounded-md font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
+                                    <i data-lucide="cloud-upload" class="w-5 h-5"></i>
+                                    <span>Upload Paper to Firebase</span>
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+                    
+                    <!-- Analytics Section (Admin only) -->
+                    <section id="analytics" class="page-section hidden">
+                         <h3 class="text-2xl font-bold mb-6">Analytics Dashboard</h3>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                                 <h4 class="font-semibold mb-4">Papers by Department</h4>
+                                 <canvas id="papersByDeptChart"></canvas>
+                             </div>
+                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                                 <h4 class="font-semibold mb-4">Downloads per Month</h4>
+                                 <canvas id="downloadsPerMonthChart"></canvas>
+                             </div>
+                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                                 <h4 class="font-semibold mb-4">Exam Type Distribution</h4>
+                                 <canvas id="examTypeChart" class="max-h-80 mx-auto"></canvas>
+                             </div>
+                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                                 <h4 class="font-semibold mb-4">Papers Uploaded Over Time</h4>
+                                 <canvas id="uploadsOverTimeChart"></canvas>
+                             </div>
+                         </div>
+                    </section>
+
+                    <!-- About Section -->
+                    <section id="about" class="page-section hidden">
+                        <h3 class="text-2xl font-bold mb-6">About Pragati Engineering College</h3>
+                        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg max-w-4xl mx-auto">
+                            <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                                Pragati Engineering College, a leading institution in technical education, is dedicated to fostering innovation, academic excellence, and holistic development. Founded with the vision to create world-class engineers, the college offers state-of-the-art infrastructure and a learned faculty. 
+                            </p>
+                            <p class="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+                                This Question Paper Portal is an initiative to provide seamless access to academic resources, helping students prepare effectively for their examinations. We believe in leveraging technology to enhance the learning experience.
+                            </p>
+                             <div class="mt-8 border-t dark:border-gray-700 pt-6">
+                                <h4 class="text-lg font-semibold mb-4">Contact Information</h4>
+                                <p><strong>Address:</strong> ADB Road, Surampalem, East Godavari District, Andhra Pradesh, India</p>
+                                <p><strong>Phone:</strong> +91-12345-67890</p>
+                                <p><strong>Email:</strong> contact@pragati.ac.in</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <!-- Login Page (Shown by default) -->
+    <div id="login-container" class="min-h-screen bg-cover bg-center" style="background-image: url('https://i.postimg.cc/rsHk3pT1/1480074098b-1.png');">
+        <div class="min-h-screen flex items-center justify-center bg-black bg-opacity-60">
+            <div class="w-full max-w-md p-8 space-y-8 bg-white dark:bg-gray-800 rounded-xl shadow-2xl">
+                <div class="text-center">
+                    <h1 class="text-3xl font-bold text-blue-600 dark:text-blue-400">Pragati Portal Login</h1>
+                    <p class="mt-2 text-gray-500 dark:text-gray-400">Welcome back, please sign in.</p>
+                </div>
+
+                <!-- Role Selection Tabs -->
+                <div class="flex border-b border-gray-300 dark:border-gray-700">
+                    <button id="student-login-tab" class="flex-1 py-3 font-semibold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400">
+                        Student
+                    </button>
+                    <button id="admin-login-tab" class="flex-1 py-3 font-semibold text-gray-500 dark:text-gray-400">
+                        Admin
+                    </button>
+                </div>
+
+                <form id="login-form" class="mt-8 space-y-6">
+                    <!-- Hidden input to store role -->
+                    <input type="hidden" id="login-role" value="student">
+
+                    <div class="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label for="email-address" class="sr-only">Email address</label>
+                            <input id="email-address" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Email address">
+                        </div>
+                        <div>
+                            <label for="password" class="sr-only">Password</label>
+                            <input id="password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Password">
+                        </div>
+                    </div>
+                    <p id="login-error" class="text-red-500 text-sm text-center hidden">Invalid email or password.</p>
+                    <div>
+                        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Paper Preview -->
+    <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 id="modal-title" class="text-xl font-semibold">Paper Preview</h3>
+                <button id="close-modal" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">&times;</button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto">
+                <!-- Image preview (used as fallback) -->
+                <img id="modal-image-preview" src="https://placehold.co/800x1100/e2e8f0/4a5568?text=Question+Paper+Preview" alt="Question Paper Preview" class="w-full h-auto">
+                <!-- Text preview (for initial mock data) -->
+                <div id="modal-text-preview" class="hidden whitespace-pre-wrap p-2 bg-gray-50 dark:bg-gray-900 rounded-md"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Delete Confirmation -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md">
+            <div class="p-6">
+                <div class="text-center">
+                    <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
+                    <h3 class="text-lg font-semibold mb-2">Delete Permanently</h3>
+                    <p id="delete-modal-text" class="text-sm text-gray-500 dark:text-gray-400 mb-2">Do you really want to delete this paper? This action cannot be undone.</p>
+                    <p class="text-xs text-red-500 font-medium mb-6">⚠️ This paper and its file will be permanently removed from Firebase Realtime DB & Cloud Storage.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="cancel-delete-btn" class="w-full py-2 px-4 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold transition-colors">
+                        Cancel
+                    </button>
+                    <button id="confirm-delete-btn" class="w-full py-2 px-4 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors flex items-center justify-center space-x-1">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span>Delete Permanently</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed top-5 right-5 z-50 transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none max-w-sm w-full bg-gray-900 text-white p-4 rounded-lg shadow-2xl flex items-center space-x-3 border border-gray-700">
+        <div id="toast-icon-container" class="p-2 rounded-full bg-blue-500/20 text-blue-400">
+            <i id="toast-icon" data-lucide="info" class="w-5 h-5"></i>
+        </div>
+        <div class="flex-1">
+            <h4 id="toast-title" class="text-sm font-semibold">Notification</h4>
+            <p id="toast-message" class="text-xs text-gray-300"></p>
+        </div>
+        <button id="toast-close" class="text-gray-400 hover:text-white">&times;</button>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBMtYp_loG1IisLVyT81t-kiJdJUr9z4BE",
+            authDomain: "pragati-question-papers.firebaseapp.com",
+            databaseURL: "https://pragati-question-papers-default-rtdb.firebaseio.com",
+            projectId: "pragati-question-papers",
+            storageBucket: "pragati-question-papers.firebasestorage.app",
+            messagingSenderId: "569528313048",
+            appId: "1:569528313048:web:83e61ff5cd7860e6eee3ad",
+            measurementId: "G-NEY391D6JC"
+        };
+
+        // Initialize Firebase
+        let firebaseApp, analytics, db, storage;
+        try {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            if (firebase.analytics) analytics = firebase.analytics();
+            db = firebase.database();
+            storage = firebase.storage();
+            console.log("Firebase initialized successfully.");
+        } catch (e) {
+            console.error("Firebase initialization failed:", e);
+        }
+
+        // --- Toast Notification Helper ---
+        function showToast(title, message, type = 'info') {
+            const toast = document.getElementById('toast-notification');
+            const toastTitle = document.getElementById('toast-title');
+            const toastMessage = document.getElementById('toast-message');
+            const iconContainer = document.getElementById('toast-icon-container');
+            const iconEl = document.getElementById('toast-icon');
+
+            if (!toast) return;
+
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+
+            if (type === 'success') {
+                iconContainer.className = 'p-2 rounded-full bg-green-500/20 text-green-400';
+                iconEl.setAttribute('data-lucide', 'check-circle');
+            } else if (type === 'error') {
+                iconContainer.className = 'p-2 rounded-full bg-red-500/20 text-red-400';
+                iconEl.setAttribute('data-lucide', 'alert-circle');
+            } else {
+                iconContainer.className = 'p-2 rounded-full bg-blue-500/20 text-blue-400';
+                iconEl.setAttribute('data-lucide', 'info');
+            }
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
+            }, 4000);
+        }
+
+        const toastClose = document.getElementById('toast-close');
+        if (toastClose) {
+            toastClose.addEventListener('click', () => {
+                const toast = document.getElementById('toast-notification');
+                if (toast) {
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('translate-y-[-100px]', 'opacity-0', 'pointer-events-none');
+                }
+            });
+        }
+
+        // --- Initial Mock Data (Fallback & Seeding) ---
+        const pdfPreviewText = `Course Code: 23BM101T\n\nR23\n\nPRAGATI ENGINEERING COLLEGE: SURAMPALEM\n(AUTONOMOUS)\n\nI B.Tech I Semester Supplementary Examinations, July-2024\nLINEAR ALGEBRA AND CALCULUS\n(Common to all branches)\n\nTime: 3 hours  Max. Marks: 70...`;
+        const chemistryPreviewText = `Course Code: 23BC102T\n\nR23\n\nPRAGATI ENGINEERING COLLEGE: SURAMPALEM\n(AUTONOMOUS)\n\nI B.Tech I Semester Supplementary Examinations, July-2024\nCHEMISTRY\n(Common to EEE, ECE, CSE (CS) and IT)\n\nTime: 3 hours Max. Marks: 70...`;
+        const dataStructuresPreviewText = `Course Code:23CS201T\n\nR23\n\nPRAGATI ENGINEERING COLLEGE: SURAMPALEM\n(AUTONOMOUS)\n\nI B.Tech II Semester Regular Examinations, June-2024\nDATA STRUCTURES\n(Common to CSE, IT, CSE(AI&ML), CSE(AI), CSE(DS) and CSE(CS))\n\nTime: 3 hours Max. Marks: 70...`;
+        const operatingSystemsPreviewText = `Course Code:20CS4M01\n\nR20\n\nPRAGATI ENGINEERING COLLEGE: SURAMPALEM\n(AUTONOMOUS)\n\nII B.Tech II Semester Regular Examinations, May-2024\nOPERATING SYSTEMS\n(Minor in CSE)\n\nTime: 3 hours Max. Marks: 70...`;
+        const dbmsPreviewText = `Course Code: 201T3T02\n\nR20\n\nPRAGATI ENGINEERING COLLEGE: SURAMPALEM\n(AUTONOMOUS)\n\nII B.Tech I Semester Supplementary Examinations, June - 2024\nDATABASE MANAGEMENT SYSTEMS\n(Common to CSE, CSE(AI&ML), CSE(AI), CSE(DS) & IT)\n\nTime: 3 hours Max. Marks: 70...`;
+        const maths2PreviewText = `Course Code: 23BM201T\n\nR23\n\nPRAGATI ENGINEERING COLLEGE: SURAMPALEM\n(AUTONOMOUS)\n\nI B.Tech II Semester Regular Examinations, June-2024\nDIFFERENTIAL EQUATIONS AND VECTOR CALCULUS\n(Common to all branches)\n\nTime: 3 hours Max. Marks: 70...`;
+
+        const initialQuestionPapers = [
+            { id: 1, subject: 'Data Structures', branch: 'CSE', year: 2, semester: 1, type: 'Semester', date: '2023-11-20', regulation: 'R20', pdfName: '23CS201T - DS.txt', previewContent: dataStructuresPreviewText },
+            { id: 2, subject: 'Thermodynamics', branch: 'MECH', year: 2, semester: 1, type: 'Mid-Term', date: '2023-09-15', regulation: 'R20' },
+            { id: 3, subject: 'Digital Circuits', branch: 'ECE', year: 2, semester: 1, type: 'Semester', date: '2023-11-22', regulation: 'R20' },
+            { id: 4, subject: 'Surveying', branch: 'CIVIL', year: 2, semester: 1, type: 'Semester', date: '2023-11-25', regulation: 'R19' },
+            { id: 5, subject: 'Electrical Machines', branch: 'EEE', year: 3, semester: 1, type: 'Mid-Term', date: '2023-09-18', regulation: 'R19' },
+            { id: 6, subject: 'Operating Systems', branch: 'CSE', year: 3, semester: 1, type: 'Semester', date: '2023-11-21', regulation: 'R19', pdfName: '20CS4M01 -OS.txt', previewContent: operatingSystemsPreviewText },
+            { id: 7, subject: 'Communication Systems', branch: 'ECE', year: 3, semester: 1, type: 'Mid-Term', date: '2023-09-19', regulation: 'R19' },
+            { id: 8, subject: 'Fluid Mechanics', branch: 'MECH', year: 2, semester: 2, type: 'Semester', date: '2024-04-15', regulation: 'R23' },
+            { id: 9, subject: 'Database Management Systems', branch: 'CSE', year: 3, semester: 2, type: 'Semester', date: '2024-04-18', regulation: 'R20', pdfName: '20IT3T02 - DBMS.txt', previewContent: dbmsPreviewText },
+            { id: 10, subject: 'Structural Analysis', branch: 'CIVIL', year: 3, semester: 1, type: 'Semester', date: '2023-11-28', regulation: 'R19' },
+            { id: 11, subject: 'Python Programming', branch: 'CSE', year: 1, semester: 2, type: 'Mid-Term', date: '2024-02-20', regulation: 'R23' },
+            { id: 12, subject: 'Analog Electronics', branch: 'ECE', year: 2, semester: 2, type: 'Semester', date: '2024-04-20', regulation: 'R23' },
+            { id: 13, subject: 'Machine Learning', branch: 'AIML', year: 3, semester: 1, type: 'Semester', date: '2023-11-20', regulation: 'R20' },
+            { id: 14, subject: 'Intro to AI', branch: 'AI', year: 2, semester: 2, type: 'Mid-Term', date: '2024-02-25', regulation: 'R23' },
+            { id: 15, subject: 'Web Technologies', branch: 'IT', year: 2, semester: 2, type: 'Semester', date: '2024-04-22', regulation: 'R23' },
+            { id: 16, subject: 'Cloud Computing', branch: 'CSC', year: 4, semester: 1, type: 'Semester', date: '2023-11-29', regulation: 'R19' },
+            { id: 17, subject: 'Data Visualization', branch: 'DS', year: 2, semester: 1, type: 'Mid-Term', date: '2023-09-21', regulation: 'R20' },
+            { id: 18, subject: 'Mathematics-I (M1)', branch: 'CSE', year: 1, semester: 1, type: 'Semester', date: '2023-11-15', regulation: 'R23', pdfName: '23BM101T - LAC.txt', previewContent: pdfPreviewText },
+            { id: 19, subject: 'Engineering Physics', branch: 'ECE', year: 1, semester: 1, type: 'Semester', date: '2023-11-17', regulation: 'R23' },
+            { id: 20, subject: 'Engineering Chemistry', branch: 'MECH', year: 1, semester: 1, type: 'Semester', date: '2023-11-19', regulation: 'R23', pdfName: '23BC102T - CHEMISTRY.txt', previewContent: chemistryPreviewText },
+            { id: 21, subject: 'Mathematics-II (M2)', branch: 'CSE', year: 1, semester: 2, type: 'Semester', date: '2024-04-15', regulation: 'R23', pdfName: '23BM201T - DEVC.txt', previewContent: maths2PreviewText },
+            { id: 22, subject: 'Basic Electrical & Electronics Engg (BEEE)', branch: 'EEE', year: 1, semester: 2, type: 'Mid-Term', date: '2024-02-28', regulation: 'R23' },
+            { id: 23, subject: 'Engineering Graphics', branch: 'CIVIL', year: 1, semester: 1, type: 'Mid-Term', date: '2023-09-25', regulation: 'R23' },
+            { id: 24, subject: 'Basic Civil & Mechanical Engg (BCME)', branch: 'MECH', year: 1, semester: 2, type: 'Semester', date: '2024-04-19', regulation: 'R16' },
+            { id: 25, subject: 'Mathematics-III (M3)', branch: 'CSE', year: 2, semester: 1, type: 'Semester', date: '2023-11-23', regulation: 'R16' },
+        ];
+
+        // Global question papers state
+        let questionPapers = [];
+
+        // --- IndexedDB Local Fallback ---
+        let idb;
+        const DB_NAME = 'PragatiPapersDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'papers';
+
+        function initIDB() {
+            return new Promise((resolve) => {
+                const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => resolve(null);
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (event) => {
+                    idb = event.target.result;
+                    resolve(idb);
+                };
+            });
+        }
+
+        function deletePaperFromLocalIDB(paperId) {
+            if (!idb) return Promise.resolve();
+            return new Promise((resolve) => {
+                const tx = idb.transaction([STORE_NAME], 'readwrite');
+                tx.objectStore(STORE_NAME).delete(paperId);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => resolve();
+            });
+        }
+
+        // --- Firebase Realtime Synchronization ---
+        function syncWithFirebase() {
+            if (!db) {
+                console.warn("Firebase Realtime DB not available, loading fallback data.");
+                questionPapers = [...initialQuestionPapers];
+                filterPapers();
+                animateCounters();
+                return;
+            }
+
+            const papersRef = db.ref('papers');
+            papersRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    if (Array.isArray(data)) {
+                        questionPapers = data.filter(Boolean);
+                    } else if (typeof data === 'object') {
+                        questionPapers = Object.values(data);
+                    }
+                } else {
+                    console.log("Firebase papers store is empty. Seeding initial data...");
+                    const seedMap = {};
+                    initialQuestionPapers.forEach(paper => {
+                        seedMap[paper.id] = paper;
+                    });
+                    db.ref('papers').set(seedMap);
+                    questionPapers = [...initialQuestionPapers];
+                }
+
+                filterPapers();
+                animateCounters();
+                if (document.getElementById('analytics') && !document.getElementById('analytics').classList.contains('hidden')) {
+                    renderCharts();
+                }
+            }, (err) => {
+                console.error("Firebase sync error:", err);
+                questionPapers = [...initialQuestionPapers];
+                filterPapers();
+                animateCounters();
+            });
+        }
+
+        // --- DOM Elements ---
+        const appContainer = document.getElementById('app-container');
+        const loginContainer = document.getElementById('login-container');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+        const studentLoginTab = document.getElementById('student-login-tab');
+        const adminLoginTab = document.getElementById('admin-login-tab');
+        const loginRoleInput = document.getElementById('login-role');
+
+        lucide.createIcons();
+
+        // --- Auth Logic ---
+        function showApp() {
+            loginContainer.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+
+            const userRole = sessionStorage.getItem('userRole');
+            const uploadLink = document.querySelector('a[href="#upload"]');
+            const analyticsLink = document.querySelector('a[href="#analytics"]');
+            const mobileUploadLink = document.querySelector('.mobile-nav-link[href="#upload"]');
+            const mobileAnalyticsLink = document.querySelector('.mobile-nav-link[href="#analytics"]');
+
+            if (userRole === 'student') {
+                if (uploadLink) uploadLink.classList.add('hidden');
+                if (analyticsLink) analyticsLink.classList.add('hidden');
+                if (mobileUploadLink) mobileUploadLink.classList.add('hidden');
+                if (mobileAnalyticsLink) mobileAnalyticsLink.classList.add('hidden');
+            } else {
+                if (uploadLink) uploadLink.classList.remove('hidden');
+                if (analyticsLink) analyticsLink.classList.remove('hidden');
+                if (mobileUploadLink) mobileUploadLink.classList.remove('hidden');
+                if (mobileAnalyticsLink) mobileAnalyticsLink.classList.remove('hidden');
+            }
+
+            const initialPage = window.location.hash.substring(1) || 'home';
+            showPage(initialPage);
+            animateCounters();
+            renderPapers(questionPapers, papersGrid, noResults);
+        }
+
+        function showLogin() {
+            appContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('userRole');
+        }
+
+        if (studentLoginTab) {
+            studentLoginTab.addEventListener('click', () => {
+                if (loginRoleInput) loginRoleInput.value = 'student';
+                studentLoginTab.classList.add('text-blue-600', 'dark:text-blue-400', 'border-b-2', 'border-blue-600', 'dark:border-blue-400');
+                studentLoginTab.classList.remove('text-gray-500', 'dark:text-gray-400');
+                adminLoginTab.classList.add('text-gray-500', 'dark:text-gray-400');
+                adminLoginTab.classList.remove('text-blue-600', 'dark:text-blue-400', 'border-b-2', 'border-blue-600', 'dark:border-blue-400');
+                if (loginError) loginError.classList.add('hidden');
+            });
+        }
+        if (adminLoginTab) {
+            adminLoginTab.addEventListener('click', () => {
+                if (loginRoleInput) loginRoleInput.value = 'admin';
+                adminLoginTab.classList.add('text-blue-600', 'dark:text-blue-400', 'border-b-2', 'border-blue-600', 'dark:border-blue-400');
+                adminLoginTab.classList.remove('text-gray-500', 'dark:text-gray-400');
+                studentLoginTab.classList.add('text-gray-500', 'dark:text-gray-400');
+                studentLoginTab.classList.remove('text-blue-600', 'dark:text-blue-400', 'border-b-2', 'border-blue-600', 'dark:border-blue-400');
+                if (loginError) loginError.classList.add('hidden');
+            });
+        }
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = e.target.email.value;
+            const password = e.target.password.value;
+            const role = loginRoleInput ? loginRoleInput.value : 'student';
+            
+            let loginSuccess = false;
+            
+            if (role === 'student' && email === 'student@pragati.ac.in' && password === 'password123') {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userRole', 'student');
+                loginSuccess = true;
+            } else if (role === 'admin' && email === 'admin@pragati.ac.in' && password === 'admin123') {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userRole', 'admin');
+                loginSuccess = true;
+            }
+
+            if (loginSuccess) {
+                showApp();
+                showToast("Welcome Back!", `Logged in successfully as ${role.toUpperCase()}.`, "success");
+            } else {
+                loginError.classList.remove('hidden');
+                loginForm.classList.add('shake');
+                setTimeout(() => {
+                    loginForm.classList.remove('shake');
+                }, 500);
+            }
+        });
+
+        if (logoutBtn) logoutBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+        if (logoutBtnMobile) logoutBtnMobile.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+
+        // --- Theme Toggle ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.classList.toggle('dark', savedTheme === 'dark');
+        if (themeIcon) {
+            themeIcon.setAttribute('data-lucide', savedTheme === 'dark' ? 'moon' : 'sun');
+            lucide.createIcons();
+        }
+        
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                html.classList.toggle('dark');
+                const isDark = html.classList.contains('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                if (themeIcon) {
+                    themeIcon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+                    lucide.createIcons();
+                }
+                if (document.getElementById('analytics') && !document.getElementById('analytics').classList.contains('hidden')) {
+                    renderCharts();
+                }
+            });
+        }
+
+        // --- Page Navigation ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pageSections = document.querySelectorAll('.page-section');
+        
+        function showPage(pageId) {
+            const userRole = sessionStorage.getItem('userRole');
+            if (userRole === 'student' && (pageId === 'upload' || pageId === 'analytics')) {
+                pageId = 'home'; 
+                window.location.hash = '#home';
+            }
+
+            pageSections.forEach(section => {
+                section.classList.toggle('hidden', section.id !== pageId);
+            });
+            if (pageId === 'analytics') renderCharts();
+            window.scrollTo(0, 0);
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                const href = link.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    const pageId = href.substring(1);
+                    showPage(pageId);
+                    if (link.classList.contains('mobile-nav-link')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+        
+        // --- Mobile Menu ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const closeMobileMenuButton = document.getElementById('close-mobile-menu');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuButton) mobileMenuButton.addEventListener('click', () => mobileMenu.classList.remove('hidden'));
+        if (closeMobileMenuButton) closeMobileMenuButton.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+        if (mobileMenu) {
+            mobileMenu.addEventListener('click', (e) => {
+                if (e.target === mobileMenu) mobileMenu.classList.add('hidden');
+            });
+        }
+
+        // --- 3D Header Animation ---
+        let renderer; 
+        function initThreeJS() {
+            const canvasContainer = document.getElementById('threejs-canvas');
+            if (!canvasContainer) return;
+            
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+            canvasContainer.innerHTML = '';
+            canvasContainer.appendChild(renderer.domElement);
+            
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const cubes = [];
+            for (let i = 0; i < 50; i++) {
+                const material = new THREE.MeshBasicMaterial({ color: 0x4299e1, wireframe: true });
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.x = (Math.random() - 0.5) * 10;
+                cube.position.y = (Math.random() - 0.5) * 10;
+                cube.position.z = (Math.random() - 0.5) * 10;
+                scene.add(cube);
+                cubes.push(cube);
+            }
+            
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                cubes.forEach(cube => {
+                    cube.rotation.x += 0.005;
+                    cube.rotation.y += 0.005;
+                });
+                if (renderer) renderer.render(scene, camera);
+            }
+            animate();
+            
+            window.addEventListener('resize', () => {
+                if (!renderer || !canvasContainer) return;
+                renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+                camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+                camera.updateProjectionMatrix();
+            });
+        }
+        
+        // --- Animated Counters ---
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200;
+
+        const animateCounters = () => {
+            const totalPapersEl = document.querySelectorAll('.counter')[0];
+            if (totalPapersEl) totalPapersEl.dataset.target = questionPapers.length;
+            
+            const subjects = [...new Set(questionPapers.map(p => p.subject))].length;
+            const subjectsEl = document.querySelectorAll('.counter')[1];
+            if (subjectsEl) subjectsEl.dataset.target = subjects;
+
+            const departments = [...new Set(questionPapers.map(p => p.branch))].length;
+            const departmentsEl = document.querySelectorAll('.counter')[2];
+            if (departmentsEl) departmentsEl.dataset.target = departments;
+
+            counters.forEach(counter => {
+                const updateCount = () => {
+                    const target = +counter.getAttribute('data-target');
+                    const count = +counter.innerText;
+                    const inc = target / speed;
+
+                    if (count < target) {
+                        counter.innerText = Math.ceil(count + inc);
+                        setTimeout(updateCount, 1);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                updateCount();
+            });
+        };
+        
+        // --- Question Paper Filtering and Rendering ---
+        const papersGrid = document.getElementById('papers-grid');
+        const searchInput = document.getElementById('search-input');
+        const branchFilter = document.getElementById('branch-filter');
+        const yearFilter = document.getElementById('year-filter');
+        const regulationFilter = document.getElementById('regulation-filter');
+        const examTypeFilter = document.getElementById('exam-type-filter');
+        const noResults = document.getElementById('no-results');
+        const departmentGrid = document.getElementById('department-grid');
+        const uploadForm = document.getElementById('upload-form');
+        const fileUploadInput = document.getElementById('file-upload');
+        const fileUploadName = document.getElementById('file-upload-name');
+        const uploadSubmitBtn = document.getElementById('upload-submit-btn');
+        
+        const deleteModal = document.getElementById('delete-confirm-modal');
+        const deleteModalText = document.getElementById('delete-modal-text');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+
+        function renderPapers(papers, gridElement, noResultsElement) {
+            if (!gridElement) return;
+            gridElement.innerHTML = '';
+            if (papers.length === 0) {
+                if (noResultsElement) noResultsElement.classList.remove('hidden');
+                return;
+            }
+            if (noResultsElement) noResultsElement.classList.add('hidden');
+
+            const userRole = sessionStorage.getItem('userRole'); 
+
+            papers.forEach((paper, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 card-enter';
+                card.style.animationDelay = `${index * 50}ms`;
+                
+                let branchColor = 'blue';
+                switch(paper.branch) {
+                    case 'CSE': branchColor = 'blue'; break;
+                    case 'ECE': branchColor = 'indigo'; break;
+                    case 'MECH': branchColor = 'red'; break;
+                    case 'CIVIL': branchColor = 'green'; break;
+                    case 'EEE': branchColor = 'yellow'; break;
+                    case 'AIML': branchColor = 'pink'; break;
+                    case 'AI': branchColor = 'purple'; break;
+                    case 'IT': branchColor = 'orange'; break;
+                    case 'CSC': branchColor = 'teal'; break;
+                    case 'DS': branchColor = 'cyan'; break;
+                }
+
+                const hasDownload = paper.fileUrl || paper.pdfBlob || paper.previewContent;
+                const downloadButtonHTML = hasDownload
+                    ? `<button class="download-btn text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-4 rounded-md transition-colors" data-id="${paper.id}">Download</button>`
+                    : `<button class="text-sm bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 py-2 px-4 rounded-md cursor-not-allowed" disabled>Download</button>`;
+
+                const deleteButtonHTML = userRole === 'admin'
+                    ? `<button class="delete-btn text-sm bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900 text-red-600 dark:text-red-400 p-2 rounded-md transition-colors flex items-center justify-center" data-id="${paper.id}" title="Permanently Delete">
+                           <i data-lucide="trash-2" class="w-4 h-4"></i>
+                       </button>`
+                    : '';
+
+                card.innerHTML = `
+                    <div class="p-5">
+                        <div class="flex justify-between items-start">
+                             <h4 class="font-bold text-lg mb-2">${paper.subject}</h4>
+                             <span class="text-xs font-semibold px-2 py-1 bg-${branchColor}-100 text-${branchColor}-800 rounded-full dark:bg-${branchColor}-900 dark:text-${branchColor}-300">${paper.branch}</span>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
+                            Year ${paper.year} &bull; Sem ${paper.semester} &bull; <span class="font-semibold text-blue-600 dark:text-blue-400">${paper.regulation || 'R23'}</span> &bull; ${paper.type}
+                        </p>
+                        <div class="flex justify-between items-center space-x-2">
+                            <button class="preview-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors" data-id="${paper.id}">Preview</button>
+                            ${downloadButtonHTML}
+                            ${deleteButtonHTML}
+                        </div>
+                    </div>
+                `;
+                gridElement.appendChild(card);
+            });
+            
+            if (userRole === 'admin') {
+                lucide.createIcons();
+            }
+        }
+        
+        function filterPapers() {
+            if (!searchInput) return;
+            const searchTerm = searchInput.value.toLowerCase();
+            const branch = branchFilter.value;
+            const year = yearFilter.value;
+            const regulation = regulationFilter.value;
+            const examType = examTypeFilter.value;
+
+            const filteredPapers = questionPapers.filter(paper => {
+                const matchSearch = paper.subject.toLowerCase().includes(searchTerm);
+                const matchBranch = branch === 'all' || paper.branch === branch;
+                const matchYear = year === 'all' || paper.year == year;
+                const matchReg = regulation === 'all' || paper.regulation === regulation;
+                const matchExam = examType === 'all' || paper.type === examType;
+                return matchSearch && matchBranch && matchYear && matchReg && matchExam;
+            });
+            renderPapers(filteredPapers, papersGrid, noResults);
+        }
+
+        if (searchInput) searchInput.addEventListener('input', filterPapers);
+        if (branchFilter) branchFilter.addEventListener('change', filterPapers);
+        if (yearFilter) yearFilter.addEventListener('change', filterPapers);
+        if (regulationFilter) regulationFilter.addEventListener('change', filterPapers);
+        if (examTypeFilter) examTypeFilter.addEventListener('change', filterPapers);
+
+        if (departmentGrid) {
+            departmentGrid.addEventListener('click', (e) => {
+                const card = e.target.closest('.department-card');
+                if (card) {
+                    const department = card.dataset.department;
+                    document.querySelectorAll('.department-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    
+                    const departmentPapers = questionPapers.filter(p => p.branch === department);
+                    
+                    const departmentPapersView = document.getElementById('department-papers-view');
+                    const departmentPapersTitle = document.getElementById('department-papers-title');
+                    const departmentPapersGrid = document.getElementById('department-papers-grid');
+                    const departmentNoResults = document.getElementById('department-no-results');
+
+                    if (departmentPapersTitle) departmentPapersTitle.textContent = `Question Papers for ${department}`;
+                    renderPapers(departmentPapers, departmentPapersGrid, departmentNoResults);
+
+                    if (departmentPapersView) {
+                        departmentPapersView.classList.remove('hidden');
+                        departmentPapersView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+        }
+        
+        // --- REAL PERMANENT DELETE (Firebase RTDB + Firebase Storage) ---
+        async function deletePaper(paperId) {
+            const paper = questionPapers.find(p => p.id == paperId);
+            if (!paper) return;
+
+            try {
+                // 1. Delete record permanently from Firebase Realtime Database
+                if (db) {
+                    await db.ref('papers/' + paperId).remove();
+                    console.log("Permanently deleted record from Firebase Realtime DB:", paperId);
+                }
+
+                // 2. Attempt non-blocking file delete from Firebase Storage if applicable
+                if (storage && paper.storagePath) {
+                    try {
+                        storage.ref(paper.storagePath).delete().then(() => {
+                            console.log("Deleted file from Firebase Storage.");
+                        }).catch((storageErr) => {
+                            console.warn("Storage delete note:", storageErr.message);
+                        });
+                    } catch (e) {
+                        console.warn("Storage delete init note:", e.message);
+                    }
+                }
+
+                // 3. Delete from IndexedDB local cache & memory array
+                await deletePaperFromLocalIDB(paperId);
+                questionPapers = questionPapers.filter(p => p.id != paperId);
+
+                // 4. Update UI
+                filterPapers();
+                animateCounters();
+
+                const departmentPapersView = document.getElementById('department-papers-view');
+                if (departmentPapersView && !departmentPapersView.classList.contains('hidden')) {
+                    const selectedCard = document.querySelector('.department-card.selected');
+                    if (selectedCard) {
+                        const department = selectedCard.dataset.department;
+                        const departmentPapers = questionPapers.filter(p => p.branch === department);
+                        renderPapers(
+                            departmentPapers, 
+                            document.getElementById('department-papers-grid'), 
+                            document.getElementById('department-no-results')
+                        );
+                    }
+                }
+
+                showToast("Paper Deleted", `"${paper.subject}" (${paper.branch}) was permanently deleted from Firebase.`, "success");
+            } catch (error) {
+                console.error("Failed to delete paper permanently:", error);
+                showToast("Delete Failed", error.message || "Could not delete paper permanently.", "error");
+            }
+        }
+
+        // --- File Upload Form Handling (Firebase Storage & RTDB) ---
+        if (fileUploadInput && fileUploadName) {
+            fileUploadInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    fileUploadName.textContent = `Selected File: ${e.target.files[0].name}`;
+                } else {
+                    fileUploadName.textContent = '';
+                }
+            });
+        }
+
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const subject = document.getElementById('upload-subject').value.trim();
+                const branch = document.getElementById('upload-branch').value;
+                const year = document.getElementById('upload-year').value;
+                const semester = document.getElementById('upload-semester').value;
+                const regulation = document.getElementById('upload-regulation').value;
+                const examType = document.getElementById('upload-exam-type').value;
+                const file = fileUploadInput.files[0];
+
+                if (!subject || !file) {
+                    showToast("Form Incomplete", "Please enter a subject name and attach a question paper file.", "error");
+                    return;
+                }
+
+                // Show spinner loading state
+                if (uploadSubmitBtn) {
+                    uploadSubmitBtn.disabled = true;
+                    uploadSubmitBtn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Uploading to Firebase...</span>`;
+                    lucide.createIcons();
+                }
+
+                try {
+                    const paperId = Date.now();
+                    const sanitizeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                    const storagePath = `papers/${paperId}_${sanitizeFileName}`;
+
+                    // Convert file to Data URL for instant, reliable Firebase Realtime DB storage
+                    const fileDataUrl = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = (err) => reject(err);
+                        reader.readAsDataURL(file);
+                    });
+
+                    const newPaper = {
+                        id: paperId,
+                        subject: subject,
+                        branch: branch,
+                        year: parseInt(year),
+                        semester: parseInt(semester),
+                        regulation: regulation,
+                        type: examType,
+                        date: new Date().toISOString().split('T')[0],
+                        pdfName: file.name,
+                        fileUrl: fileDataUrl,
+                        storagePath: storagePath
+                    };
+
+                    // Save paper record & file content directly to Firebase Realtime Database
+                    if (db) {
+                        await db.ref('papers/' + paperId).set(newPaper);
+                        console.log("Paper record saved to Firebase Realtime DB");
+
+                        // Attempt background Cloud Storage upload if available
+                        if (storage) {
+                            try {
+                                const storageRef = storage.ref(storagePath);
+                                storageRef.put(file).then(async (snapshot) => {
+                                    const url = await snapshot.ref.getDownloadURL();
+                                    db.ref(`papers/${paperId}/fileUrl`).set(url);
+                                    console.log("Updated Firebase Realtime DB with Cloud Storage URL:", url);
+                                }).catch((storageErr) => {
+                                    console.warn("Storage upload note (using Realtime DB file data):", storageErr.message);
+                                });
+                            } catch (e) {
+                                console.warn("Storage upload init note:", e.message);
+                            }
+                        }
+                    } else {
+                        await savePaperToLocalIDB(newPaper);
+                        questionPapers.unshift(newPaper);
+                        filterPapers();
+                    }
+
+                    showToast("Upload Successful", `"${subject}" (${regulation}) uploaded permanently to Firebase!`, "success");
+
+                    uploadForm.reset();
+                    fileUploadName.textContent = '';
+                    
+                    if (uploadSubmitBtn) {
+                        uploadSubmitBtn.disabled = false;
+                        uploadSubmitBtn.innerHTML = `<i data-lucide="cloud-upload" class="w-5 h-5"></i><span>Upload Paper to Firebase</span>`;
+                        lucide.createIcons();
+                    }
+
+                    showPage('papers');
+                } catch (error) {
+                    console.error("Upload error:", error);
+                    showToast("Upload Failed", error.message || "Failed to upload file to Firebase.", "error");
+                    if (uploadSubmitBtn) {
+                        uploadSubmitBtn.disabled = false;
+                        uploadSubmitBtn.innerHTML = `<i data-lucide="cloud-upload" class="w-5 h-5"></i><span>Upload Paper to Firebase</span>`;
+                        lucide.createIcons();
+                    }
+                }
+            });
+        }
+
+        // --- Preview & Download Modal Handling ---
+        const modal = document.getElementById('preview-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalImagePreview = document.getElementById('modal-image-preview');
+        const modalTextPreview = document.getElementById('modal-text-preview');
+        
+        let confirmDeleteHandler;
+
+        [papersGrid, document.getElementById('department-papers-grid')].forEach(grid => {
+            if (!grid) return; 
+            grid.addEventListener('click', e => {
+                const button = e.target.closest('button');
+                if (!button) return;
+
+                const paperId = button.getAttribute('data-id');
+                if (!paperId) return;
+
+                const paper = questionPapers.find(p => p.id == paperId);
+                if (!paper) return; 
+
+                // Preview Button
+                if (button.classList.contains('preview-btn')) {
+                    if (modalTitle) modalTitle.textContent = `${paper.subject} - ${paper.branch} (${paper.regulation || 'R23'} - ${paper.type})`;
+                    
+                    if (paper.fileUrl) {
+                        modalImagePreview.classList.add('hidden');
+                        modalTextPreview.classList.remove('hidden');
+                        modalTextPreview.innerHTML = `
+                            <div class="text-center p-6 space-y-4">
+                                <i data-lucide="file-check" class="w-16 h-16 text-blue-500 mx-auto"></i>
+                                <h4 class="text-xl font-bold">${paper.subject}</h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Regulation: <span class="font-semibold text-blue-600 dark:text-blue-400">${paper.regulation || 'R23'}</span> &bull; ${paper.branch} &bull; Year ${paper.year}</p>
+                                <p class="text-xs text-gray-400">File Name: ${paper.pdfName || 'Document'}</p>
+                                <div class="flex justify-center space-x-4 pt-4">
+                                    <a href="${paper.fileUrl}" target="_blank" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition-colors inline-flex items-center space-x-2">
+                                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                                        <span>Open / Download File</span>
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                    } else if (paper.previewContent) {
+                        modalImagePreview.classList.add('hidden');
+                        modalTextPreview.classList.remove('hidden');
+                        modalTextPreview.textContent = paper.previewContent;
+                    } else {
+                        modalTextPreview.classList.add('hidden');
+                        modalImagePreview.classList.remove('hidden');
+                        modalImagePreview.src = "https://placehold.co/800x1100/e2e8f0/4a5568?text=Preview+Not+Available";
+                    }
+                    
+                    if (modal) modal.classList.remove('hidden');
+                }
+
+                // Download Button
+                if (button.classList.contains('download-btn')) {
+                    if (paper.fileUrl) {
+                        window.open(paper.fileUrl, '_blank');
+                    } else if (paper.pdfBlob && paper.pdfName) {
+                        const url = URL.createObjectURL(paper.pdfBlob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = paper.pdfName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    } else if (paper.previewContent) {
+                        const blob = new Blob([paper.previewContent], { type: 'text/plain;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = paper.pdfName || `${paper.subject.replace(/\s+/g, '_')}_${paper.regulation || 'R23'}.txt`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }
+                }
+                
+                // Delete Button
+                if (button.classList.contains('delete-btn')) {
+                    if (deleteModalText) deleteModalText.textContent = `Do you really want to delete the paper for "${paper.subject}" (${paper.branch} - ${paper.regulation || 'R23'})?`;
+                    
+                    if (confirmDeleteHandler) {
+                        confirmDeleteBtn.removeEventListener('click', confirmDeleteHandler);
+                    }
+                    
+                    confirmDeleteHandler = () => {
+                        deletePaper(paper.id);
+                        if (deleteModalText) deleteModalText.textContent = '';
+                        if (deleteModal) deleteModal.classList.add('hidden');
+                    };
+
+                    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', confirmDeleteHandler, { once: true });
+                    if (deleteModal) deleteModal.classList.remove('hidden');
+                }
+            });
+        });
+
+        if (closeModalBtn) closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+        }
+        
+        if (cancelDeleteBtn) {
+            cancelDeleteBtn.addEventListener('click', () => {
+                if (deleteModal) deleteModal.classList.add('hidden');
+                if (confirmDeleteHandler && confirmDeleteBtn) {
+                    confirmDeleteBtn.removeEventListener('click', confirmDeleteHandler);
+                }
+            });
+        }
+        if (deleteModal) {
+            deleteModal.addEventListener('click', (e) => {
+                if (e.target === deleteModal) {
+                    deleteModal.classList.add('hidden');
+                    if (confirmDeleteHandler && confirmDeleteBtn) {
+                        confirmDeleteBtn.removeEventListener('click', confirmDeleteHandler);
+                    }
+                }
+            });
+        }
+
+        // --- Analytics Charts ---
+        let charts = {};
+        
+        function renderCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDark ? '#E5E7EB' : '#1F2937';
+
+            // Chart 1: Papers by Department
+            const ctx1 = document.getElementById('papersByDeptChart')?.getContext('2d');
+            if (ctx1) {
+                if (charts.papersByDept) charts.papersByDept.destroy();
+
+                const deptCounts = {};
+                const deptLabels = ['CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'AIML', 'AI', 'IT', 'CSC', 'DS'];
+                deptLabels.forEach(label => deptCounts[label] = 0);
+                questionPapers.forEach(paper => {
+                    if (deptCounts.hasOwnProperty(paper.branch)) {
+                        deptCounts[paper.branch]++;
+                    }
+                });
+                const deptData = deptLabels.map(label => deptCounts[label]);
+
+                charts.papersByDept = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: deptLabels,
+                        datasets: [{
+                            label: '# of Papers',
+                            data: deptData, 
+                            backgroundColor: ['#3B82F6', '#8B5CF6', '#EF4444', '#22C55E', '#F59E0B', '#EC4899', '#A855F7', '#F97316', '#14B8A6', '#06B6D4'],
+                        }]
+                    },
+                    options: {
+                        scales: { y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { color: gridColor }, ticks: { color: textColor } } },
+                        plugins: { legend: { labels: { color: textColor } } }
+                    }
+                });
+            }
+
+            // Chart 2: Downloads per Month
+            const ctx2 = document.getElementById('downloadsPerMonthChart')?.getContext('2d');
+            if (ctx2) {
+                if (charts.downloadsPerMonth) charts.downloadsPerMonth.destroy();
+                charts.downloadsPerMonth = new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Downloads',
+                            data: [120, 190, 300, 500, 250, 400],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        scales: { y: { grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { color: gridColor }, ticks: { color: textColor } } },
+                        plugins: { legend: { labels: { color: textColor } } }
+                    }
+                });
+            }
+
+            // Chart 3: Exam Type Distribution
+            const ctx3 = document.getElementById('examTypeChart')?.getContext('2d');
+            if (ctx3) {
+                const midTermCount = questionPapers.filter(p => p.type === 'Mid-Term').length;
+                const semesterCount = questionPapers.filter(p => p.type === 'Semester').length;
+                if (charts.examType) charts.examType.destroy();
+                charts.examType = new Chart(ctx3, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Mid-Term', 'Semester'],
+                        datasets: [{
+                            data: [midTermCount, semesterCount],
+                            backgroundColor: ['#F59E0B', '#3B82F6'],
+                            borderColor: isDark ? '#1f2937' : '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: textColor }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Chart 4: Uploads Over Time
+            const ctx4 = document.getElementById('uploadsOverTimeChart')?.getContext('2d');
+            if (ctx4) {
+                if (charts.uploadsOverTime) charts.uploadsOverTime.destroy();
+                charts.uploadsOverTime = new Chart(ctx4, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Papers Uploaded',
+                            data: [15, 25, 22, 30, 45, questionPapers.length],
+                            borderColor: '#8B5CF6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        scales: { y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } }, x: { grid: { color: gridColor }, ticks: { color: textColor } } },
+                        plugins: { legend: { labels: { color: textColor } } }
+                    }
+                });
+            }
+        }
+        
+        // --- App Initialization ---
+        async function initApp() {
+            try {
+                await initIDB();
+                syncWithFirebase();
+                
+                if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                    showApp();
+                } else {
+                    showLogin();
+                }
+                
+                initThreeJS();
+            } catch (error) {
+                console.error("Failed to initialize portal:", error);
+            }
+        }
+
+        initApp();
+    });
+    </script>
+</body>
+</html>
