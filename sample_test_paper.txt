@@ -1,0 +1,9 @@
+Course Code: 23BM101T
+Regulation: R23
+PRAGATI ENGINEERING COLLEGE (AUTONOMOUS)
+I B.Tech I Semester Supplementary Examinations
+LINEAR ALGEBRA AND CALCULUS
+Time: 3 hours  Max. Marks: 70
+Answer any FIVE questions. All questions carry equal marks.
+1. (a) Find the rank of the matrix [[1,2,3],[2,4,7],[3,6,10]] by reducing to Echelon form.
+   (b) Test for consistency: x + y + z = 6, x - y + 2z = 5, 3x + y + z = 8.
