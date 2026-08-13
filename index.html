@@ -2374,32 +2374,42 @@
 
                 const hasDownload = paper.fileUrl || paper.pdfBlob || paper.previewContent;
                 const downloadButtonHTML = hasDownload
-                    ? `<button class="download-btn text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-4 rounded-md transition-colors" data-id="${paper.id}">Download</button>`
-                    : `<button class="text-sm bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 py-2 px-4 rounded-md cursor-not-allowed" disabled>Download</button>`;
+                    ? `<button class="download-btn flex-1 bg-gray-100 dark:bg-gray-700/80 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold text-xs py-2.5 px-3 rounded-lg transition-all flex items-center justify-center space-x-1.5 shadow-sm" data-id="${paper.id}">
+                           <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                           <span>Download</span>
+                       </button>`
+                    : `<button class="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 font-semibold text-xs py-2.5 px-3 rounded-lg cursor-not-allowed flex items-center justify-center space-x-1" disabled>
+                           <span>No File</span>
+                       </button>`;
 
                 const editButtonHTML = userRole === 'admin'
-                    ? `<button class="edit-btn text-sm bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-900/50 dark:hover:bg-yellow-900 text-yellow-700 dark:text-yellow-300 p-2 rounded-md transition-colors flex items-center justify-center" data-id="${paper.id}" title="Edit Paper Details">
+                    ? `<button class="edit-btn p-2.5 bg-amber-100 dark:bg-amber-900/40 hover:bg-amber-200 dark:hover:bg-amber-800/60 text-amber-700 dark:text-amber-300 rounded-lg transition-colors shrink-0 flex items-center justify-center" data-id="${paper.id}" title="Edit Paper Details">
                            <i data-lucide="edit-3" class="w-4 h-4"></i>
                        </button>`
                     : '';
 
                 const deleteButtonHTML = userRole === 'admin'
-                    ? `<button class="delete-btn text-sm bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900 text-red-600 dark:text-red-400 p-2 rounded-md transition-colors flex items-center justify-center" data-id="${paper.id}" title="Permanently Delete">
+                    ? `<button class="delete-btn p-2.5 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-800/60 text-red-600 dark:text-red-400 rounded-lg transition-colors shrink-0 flex items-center justify-center" data-id="${paper.id}" title="Permanently Delete">
                            <i data-lucide="trash-2" class="w-4 h-4"></i>
                        </button>`
                     : '';
 
                 card.innerHTML = `
-                    <div class="p-5">
-                        <div class="flex justify-between items-start">
-                             <h4 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">${paper.subject}</h4>
-                             <span class="text-xs font-semibold px-2 py-1 bg-${branchColor}-100 text-${branchColor}-800 rounded-full dark:bg-${branchColor}-900 dark:text-${branchColor}-300">${paper.branch}</span>
+                    <div class="p-5 flex flex-col h-full justify-between">
+                        <div>
+                            <div class="flex justify-between items-start space-x-2 mb-2">
+                                 <h4 class="font-bold text-base text-gray-900 dark:text-white leading-snug">${paper.subject}</h4>
+                                 <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 bg-${branchColor}-100 text-${branchColor}-800 rounded-md dark:bg-${branchColor}-900/70 dark:text-${branchColor}-300 shrink-0">${paper.branch}</span>
+                            </div>
+                            <p class="text-gray-500 dark:text-gray-400 text-xs mb-4">
+                                Year ${paper.year} &bull; Sem ${paper.semester} &bull; <span class="font-bold text-blue-600 dark:text-blue-400">${paper.regulation || 'R23'}</span> &bull; ${paper.type}
+                            </p>
                         </div>
-                        <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
-                            Year ${paper.year} &bull; Sem ${paper.semester} &bull; <span class="font-semibold text-blue-600 dark:text-blue-400">${paper.regulation || 'R23'}</span> &bull; ${paper.type}
-                        </p>
-                        <div class="flex justify-between items-center space-x-2">
-                            <button class="preview-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors" data-id="${paper.id}">Preview</button>
+                        <div class="flex items-center space-x-2 pt-3 border-t border-gray-100 dark:border-gray-700/60 w-full">
+                            <button class="preview-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-2.5 px-3 rounded-lg shadow-sm transition-all flex items-center justify-center space-x-1.5" data-id="${paper.id}">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                <span>Preview</span>
+                            </button>
                             ${downloadButtonHTML}
                             ${editButtonHTML}
                             ${deleteButtonHTML}
