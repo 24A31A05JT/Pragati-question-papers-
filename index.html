@@ -2664,7 +2664,46 @@
                 const paper = questionPapers.find(p => p.id == paperId);
                 if (!paper) return;
 
-                // High-Speed On-Demand PDF Load from Firebase
+                // 1. Edit Button (0ms instant trigger - no PDF fetch needed!)
+                if (button.classList.contains('edit-btn')) {
+                    e.stopPropagation();
+                    const editModal = document.getElementById('edit-paper-modal');
+                    document.getElementById('edit-paper-id').value = paper.id;
+                    document.getElementById('edit-subject').value = paper.subject;
+                    document.getElementById('edit-regulation').value = paper.regulation || 'R23';
+                    document.getElementById('edit-branch').value = paper.branch;
+                    document.getElementById('edit-year').value = paper.year;
+                    document.getElementById('edit-semester').value = paper.semester;
+                    document.getElementById('edit-type').value = paper.type;
+                    if (editModal) editModal.classList.remove('hidden');
+                    return;
+                }
+
+                // 2. Delete Button (0ms instant trigger - no PDF fetch needed!)
+                if (button.classList.contains('delete-btn')) {
+                    e.stopPropagation();
+                    const deleteModal = document.getElementById('delete-confirm-modal');
+                    const deleteModalText = document.getElementById('delete-modal-text');
+                    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+                    if (deleteModalText) deleteModalText.textContent = `Do you really want to delete the paper for "${paper.subject}" (${paper.branch} - ${paper.regulation || 'R23'})?`;
+                    
+                    if (confirmDeleteHandler) {
+                        confirmDeleteBtn.removeEventListener('click', confirmDeleteHandler);
+                    }
+                    
+                    confirmDeleteHandler = () => {
+                        deletePaper(paper.id);
+                        if (deleteModalText) deleteModalText.textContent = '';
+                        if (deleteModal) deleteModal.classList.add('hidden');
+                    };
+
+                    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', confirmDeleteHandler, { once: true });
+                    if (deleteModal) deleteModal.classList.remove('hidden');
+                    return;
+                }
+
+                // 3. High-Speed On-Demand PDF Load from Firebase (Only needed for Preview & Download!)
                 if (db && paperId && (!paper.fileUrl || (!paper.fileUrl.startsWith('data:') && !paper.fileUrl.endsWith('.pdf')))) {
                     try {
                         const snap = await db.ref('papers_content/' + paperId).once('value');
@@ -2754,37 +2793,6 @@
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
                     }
-                }
-                
-                // Edit Button
-                if (button.classList.contains('edit-btn')) {
-                    const editModal = document.getElementById('edit-paper-modal');
-                    document.getElementById('edit-paper-id').value = paper.id;
-                    document.getElementById('edit-subject').value = paper.subject;
-                    document.getElementById('edit-regulation').value = paper.regulation || 'R23';
-                    document.getElementById('edit-branch').value = paper.branch;
-                    document.getElementById('edit-year').value = paper.year;
-                    document.getElementById('edit-semester').value = paper.semester;
-                    document.getElementById('edit-type').value = paper.type;
-                    if (editModal) editModal.classList.remove('hidden');
-                }
-
-                // Delete Button
-                if (button.classList.contains('delete-btn')) {
-                    if (deleteModalText) deleteModalText.textContent = `Do you really want to delete the paper for "${paper.subject}" (${paper.branch} - ${paper.regulation || 'R23'})?`;
-                    
-                    if (confirmDeleteHandler) {
-                        confirmDeleteBtn.removeEventListener('click', confirmDeleteHandler);
-                    }
-                    
-                    confirmDeleteHandler = () => {
-                        deletePaper(paper.id);
-                        if (deleteModalText) deleteModalText.textContent = '';
-                        if (deleteModal) deleteModal.classList.add('hidden');
-                    };
-
-                    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', confirmDeleteHandler, { once: true });
-                    if (deleteModal) deleteModal.classList.remove('hidden');
                 }
             });
         });
