@@ -1966,20 +1966,7 @@
             papersRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    let parsedPapers = Array.isArray(data) ? data.filter(Boolean) : Object.values(data);
-                    // Check if existing records are using old .tar links; if so, refresh with real PDF links
-                    const containsTar = parsedPapers.some(p => p.fileUrl && p.fileUrl.endsWith('.tar'));
-                    if (containsTar) {
-                        console.log("Updating Firebase store with individual PDF question paper records...");
-                        const seedMap = {};
-                        initialQuestionPapers.forEach(paper => {
-                            seedMap[paper.id] = paper;
-                        });
-                        db.ref('papers').set(seedMap);
-                        questionPapers = [...initialQuestionPapers];
-                    } else {
-                        questionPapers = parsedPapers;
-                    }
+                    questionPapers = Array.isArray(data) ? data.filter(Boolean) : Object.values(data);
                 } else {
                     console.log("Firebase papers store is empty. Seeding initial data...");
                     const seedMap = {};
@@ -2585,7 +2572,7 @@
                         modalImagePreview.classList.add('hidden');
                         modalTextPreview.classList.remove('hidden');
                         
-                        if (paper.fileUrl.endsWith('.pdf')) {
+                        if (paper.fileUrl.endsWith('.pdf') || paper.fileUrl.startsWith('data:application/pdf')) {
                             modalTextPreview.innerHTML = `
                                 <div class="space-y-3">
                                     <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700/60 p-3 rounded-lg">
